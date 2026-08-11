@@ -8,6 +8,23 @@ import CyberButton from "@/components/three/CyberButton";
 const ParticleField = dynamic(() => import("@/components/three/ParticleField"), { ssr: false });
 const ProfileAvatar3D = dynamic(() => import("@/components/three/ProfileAvatar3D"), { ssr: false });
 
+function ProfilePhoto() {
+  const [useFallback, setUseFallback] = useState(false);
+  if (useFallback) return <ProfileAvatar3D />;
+  return (
+    <img
+      src="/profile.jpg"
+      alt="Harkaran Singh"
+      className="absolute inset-0 w-full h-full object-cover object-top"
+      style={{
+        clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
+        filter: "brightness(0.92) contrast(1.05)",
+      }}
+      onError={() => setUseFallback(true)}
+    />
+  );
+}
+
 function GlitchText({ text }: { text: string }) {
   const [glitching, setGlitching] = useState(false);
 
@@ -239,13 +256,11 @@ export default function Hero() {
                 />
               ))}
 
-              <div className="absolute inset-0">
-                <ProfileAvatar3D />
-              </div>
+              <ProfilePhoto />
 
-              <div className="absolute bottom-8 left-0 right-0 text-center">
-                <span className="font-mono-tech text-xs text-[#6b7db3] tracking-widest">
-                  [IDENTITY: CLASSIFIED]
+              <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
+                <span className="font-mono-tech text-xs text-[#00f5ff] tracking-widest" style={{ textShadow: "0 0 8px #00f5ff" }}>
+                  HARKARAN SINGH
                 </span>
               </div>
             </div>
