@@ -2,28 +2,19 @@
 
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useMotionTemplate,
+} from "framer-motion";
 import CyberButton from "@/components/three/CyberButton";
 
 const ParticleField = dynamic(() => import("@/components/three/ParticleField"), { ssr: false });
 const ProfileAvatar3D = dynamic(() => import("@/components/three/ProfileAvatar3D"), { ssr: false });
 
-function ProfilePhoto() {
-  const [useFallback, setUseFallback] = useState(false);
-  if (useFallback) return <ProfileAvatar3D />;
-  return (
-    <img
-      src="/profile.jpg"
-      alt="Harkaran Singh"
-      className="absolute inset-0 w-full h-full object-cover object-top"
-      style={{
-        clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
-        filter: "brightness(0.92) contrast(1.05)",
-      }}
-      onError={() => setUseFallback(true)}
-    />
-  );
-}
+const CLIP = "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)";
 
 function GlitchText({ text }: { text: string }) {
   const [glitching, setGlitching] = useState(false);
@@ -55,28 +46,14 @@ function GlitchText({ text }: { text: string }) {
         <>
           <h1
             className="font-orbitron text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight absolute inset-0"
-            style={{
-              color: "#ff007a",
-              clipPath: "inset(30% 0 50% 0)",
-              transform: "translate(-3px, 0)",
-              opacity: 0.7,
-            }}
+            style={{ color: "#ff007a", clipPath: "inset(30% 0 50% 0)", transform: "translate(-3px, 0)", opacity: 0.7 }}
             aria-hidden
-          >
-            {text}
-          </h1>
+          >{text}</h1>
           <h1
             className="font-orbitron text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight absolute inset-0"
-            style={{
-              color: "#9400ff",
-              clipPath: "inset(60% 0 20% 0)",
-              transform: "translate(3px, 0)",
-              opacity: 0.7,
-            }}
+            style={{ color: "#9400ff", clipPath: "inset(60% 0 20% 0)", transform: "translate(3px, 0)", opacity: 0.7 }}
             aria-hidden
-          >
-            {text}
-          </h1>
+          >{text}</h1>
         </>
       )}
     </div>
@@ -111,6 +88,123 @@ function TypewriterText({ phrases }: { phrases: string[] }) {
       {displayed}
       <span className="animate-pulse text-[#00f5ff]">█</span>
     </span>
+  );
+}
+
+function Profile3DCard() {
+  const [useFallback, setUseFallback] = useState(false);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
+  const rotateX = useTransform(springY, [-0.5, 0.5], [14, -14]);
+  const rotateY = useTransform(springX, [-0.5, 0.5], [-14, 14]);
+  const glowX = useTransform(springX, [-0.5, 0.5], [15, 85]);
+  const glowY = useTransform(springY, [-0.5, 0.5], [15, 85]);
+  const glowBg = useMotionTemplate`radial-gradient(circle at ${glowX}% ${glowY}%, rgba(0,245,255,0.22) 0%, transparent 60%)`;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  return (
+    <motion.div
+      style={{ perspective: "900px" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ y: [0, -10, 0] }}
+      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <motion.div
+        className="relative w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96"
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      >
+        {/* Mouse-following inner glow */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ background: glowBg, clipPath: CLIP }}
+        />
+
+        {/* Outer ambient glow */}
+        <div
+          className="absolute inset-0"
+          style={{
+            clipPath: CLIP,
+            boxShadow: "0 0 40px rgba(0,245,255,0.15), inset 0 0 30px rgba(0,245,255,0.06)",
+          }}
+        />
+
+        {/* Frame border */}
+        <div
+          className="absolute inset-0 border-2 border-[rgba(0,245,255,0.55)]"
+          style={{ clipPath: CLIP }}
+        />
+
+        {/* Corner brackets */}
+        {[
+          "top-2 left-2 border-t-2 border-l-2",
+          "top-2 right-2 border-t-2 border-r-2",
+          "bottom-2 left-2 border-b-2 border-l-2",
+          "bottom-2 right-2 border-b-2 border-r-2",
+        ].map((cls, i) => (
+          <div
+            key={i}
+            className={`absolute w-6 h-6 ${cls} border-[#00f5ff] z-20`}
+            style={{ boxShadow: "0 0 10px #00f5ff" }}
+          />
+        ))}
+
+        {/* Photo or 3D fallback */}
+        {useFallback ? (
+          <ProfileAvatar3D />
+        ) : (
+          <img
+            src="/profile.jpg"
+            alt="Harkaran Singh"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+            style={{
+              clipPath: CLIP,
+              filter: "brightness(0.88) contrast(1.08) saturate(0.92)",
+            }}
+            onError={() => setUseFallback(true)}
+          />
+        )}
+
+        {/* CRT scanlines */}
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            clipPath: CLIP,
+            background:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,10,0.1) 2px, rgba(0,0,10,0.1) 4px)",
+          }}
+        />
+
+        {/* Bottom name gradient bar */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-16 z-20 pointer-events-none flex items-end justify-center pb-3"
+          style={{
+            clipPath: CLIP,
+            background: "linear-gradient(to top, rgba(0,5,20,0.92) 0%, transparent 100%)",
+          }}
+        >
+          <span
+            className="font-mono-tech text-xs text-[#00f5ff] tracking-widest"
+            style={{ textShadow: "0 0 10px #00f5ff" }}
+          >
+            HARKARAN SINGH
+          </span>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -225,45 +319,9 @@ export default function Hero() {
             initial={{ opacity: 0, x: 60, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col items-center gap-4"
+            className="flex flex-col items-center gap-6"
           >
-            <div className="relative w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "radial-gradient(circle, rgba(0,245,255,0.1) 0%, transparent 70%)",
-                  animation: "pulse-glow 3s ease-in-out infinite",
-                }}
-              />
-
-              <div
-                className="absolute inset-4 border border-[rgba(0,245,255,0.3)]"
-                style={{
-                  clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
-                }}
-              />
-
-              {[
-                "top-4 left-4 border-t-2 border-l-2",
-                "top-4 right-4 border-t-2 border-r-2",
-                "bottom-4 left-4 border-b-2 border-l-2",
-                "bottom-4 right-4 border-b-2 border-r-2",
-              ].map((cls, i) => (
-                <div
-                  key={i}
-                  className={`absolute w-6 h-6 ${cls} border-[#00f5ff]`}
-                  style={{ boxShadow: "0 0 8px #00f5ff" }}
-                />
-              ))}
-
-              <ProfilePhoto />
-
-              <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-                <span className="font-mono-tech text-xs text-[#00f5ff] tracking-widest" style={{ textShadow: "0 0 8px #00f5ff" }}>
-                  HARKARAN SINGH
-                </span>
-              </div>
-            </div>
+            <Profile3DCard />
 
             <div
               className="bg-[rgba(0,5,15,0.8)] border border-[rgba(0,245,255,0.2)] p-4 w-72 sm:w-80"
