@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 export default function Footer() {
   return (
     <footer className="relative py-10 border-t border-[rgba(0,245,255,0.1)]">

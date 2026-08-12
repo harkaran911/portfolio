@@ -48,24 +48,16 @@ function SkillBar({ skill, index }: { skill: typeof skills[0]; index: number }) 
         </div>
       </div>
       <div className="h-1.5 bg-[rgba(255,255,255,0.05)] rounded-full overflow-hidden relative">
-        <div
+        <motion.div
           className="absolute inset-y-0 left-0 rounded-full"
+          initial={{ width: 0 }}
+          animate={inView ? { width: `${skill.level}%` } : { width: 0 }}
+          transition={{ duration: 1, delay: index * 0.08 + 0.3, ease: "easeOut" }}
           style={{
             background: `linear-gradient(90deg, ${skill.color}88, ${skill.color})`,
             boxShadow: `0 0 8px ${skill.color}`,
           }}
-        >
-          <motion.div
-            className="h-full rounded-full"
-            initial={{ width: 0 }}
-            animate={inView ? { width: `${skill.level}%` } : { width: 0 }}
-            transition={{ duration: 1, delay: index * 0.08 + 0.3, ease: "easeOut" }}
-            style={{
-              background: `linear-gradient(90deg, ${skill.color}88, ${skill.color})`,
-              boxShadow: `0 0 8px ${skill.color}`,
-            }}
-          />
-        </div>
+        />
       </div>
     </motion.div>
   );
@@ -101,7 +93,7 @@ export default function About() {
               className="relative p-6 border border-[rgba(0,245,255,0.2)] bg-[rgba(0,10,20,0.6)]"
               style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)" }}
             >
-              <div className="absolute top-0 right-0 w-5 h-5 border-b-2 border-l-2 border-[#00f5ff]" style={{ transform: "translate(0,0)" }} />
+              <div className="absolute top-0 right-0 w-5 h-5 border-b-2 border-l-2 border-[#00f5ff]" />
 
               <div className="font-mono-tech text-xs text-[#00f5ff] mb-4 tracking-widest">[BIO.INIT]</div>
               <div className="flex flex-col gap-4 font-exo text-[#a0aec0] text-sm leading-relaxed">

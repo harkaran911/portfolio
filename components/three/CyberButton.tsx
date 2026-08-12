@@ -88,13 +88,9 @@ export default function CyberButton({
         transition={{ duration: 0.5 }}
       />
 
-      {/* 3D depth layer */}
       <span
         className="absolute inset-0 -z-10"
-        style={{
-          background: `linear-gradient(135deg, ${v.before}08 0%, transparent 100%)`,
-          transform: "translateZ(-4px)",
-        }}
+        style={{ background: `linear-gradient(135deg, ${v.before}08 0%, transparent 100%)` }}
       />
 
       {children}
