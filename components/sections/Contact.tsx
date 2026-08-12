@@ -10,8 +10,8 @@ export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     setStatus("sending");
     await new Promise((r) => setTimeout(r, 1800));
     setStatus("sent");
@@ -143,7 +143,6 @@ export default function Contact() {
             >
               <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#00f5ff]" />
               <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#00f5ff]" />
-              <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#00f5ff]" />
 
               <div className="font-mono-tech text-xs text-[#00f5ff] tracking-widest">[OPEN.CHANNEL]</div>
 
@@ -211,7 +210,7 @@ export default function Contact() {
                 </div>
               )}
 
-              <CyberButton variant="cyan" className="w-full justify-center">
+              <CyberButton variant="cyan" className="w-full justify-center" onClick={() => handleSubmit()}>
                 {status === "sending" ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin">◌</span> TRANSMITTING...
